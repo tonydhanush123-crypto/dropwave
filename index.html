@@ -22,12 +22,12 @@
       Drop<span class="text-sky-400">Wave</span>
     </h1>
 
-    <!-- Device Badge & QR Toggle -->
-    <div class="mt-3 inline-flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl shadow-lg">
-      <span class="text-xs text-slate-400">Your Code:</span>
-      <span id="my-code" class="text-xs font-mono font-bold text-sky-400">Connecting...</span>
-      <button onclick="copyMyCode()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded transition">Copy</button>
-      <button onclick="toggleQRModal()" class="text-[11px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 font-semibold px-2 py-0.5 rounded transition flex items-center gap-1">
+    <!-- 4-Digit Device Code Card -->
+    <div class="mt-3 inline-flex items-center gap-3 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl shadow-lg">
+      <span class="text-xs text-slate-400">Your Pairing PIN:</span>
+      <span id="my-code" class="text-lg font-mono font-black text-sky-400 tracking-widest">----</span>
+      <button onclick="copyMyCode()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded transition font-medium">Copy</button>
+      <button onclick="toggleQRModal()" class="text-[11px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 font-semibold px-2.5 py-1 rounded transition flex items-center gap-1">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
         QR
       </button>
@@ -39,10 +39,10 @@
     
     <!-- Connect Box -->
     <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
-      <label class="text-xs font-semibold text-slate-300 mb-2 block">Connect to Target Device:</label>
+      <label class="text-xs font-semibold text-slate-300 mb-2 block">Connect to Target Device PIN:</label>
       <div class="flex gap-2">
-        <input id="target-id" type="text" placeholder="Enter code (e.g. DW-1234)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 font-mono uppercase" />
-        <button onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition">Connect</button>
+        <input id="target-id" type="tel" maxlength="4" placeholder="4-digit PIN" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-lg font-mono font-bold tracking-widest text-slate-100 focus:outline-none focus:border-sky-500" />
+        <button onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition">Connect</button>
       </div>
     </div>
 
@@ -57,7 +57,7 @@
           </svg>
         </div>
         <p class="text-slate-300 font-semibold text-sm">No device connected yet</p>
-        <p class="text-slate-500 text-xs mt-1 max-w-[260px] mx-auto">Open the site on another phone or scan the QR code to pair</p>
+        <p class="text-slate-500 text-xs mt-1 max-w-[260px] mx-auto">Enter the 4-digit PIN from the other device or scan its QR code</p>
       </div>
 
       <!-- Connected State -->
@@ -66,7 +66,7 @@
           📱
         </div>
         <div class="font-bold text-sm text-slate-200">Device Connected</div>
-        <div id="peer-id-display" class="text-xs font-mono text-sky-400 mb-4"></div>
+        <div id="peer-id-display" class="text-xs font-mono text-sky-400 mb-4 tracking-wider"></div>
 
         <div class="grid grid-cols-2 gap-2 w-full">
           <button onclick="document.getElementById('file-input').click()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 px-3 rounded-xl transition shadow text-xs sm:text-sm flex items-center justify-center gap-1.5">
@@ -85,7 +85,7 @@
     <div id="transfer-box" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 hidden shadow-xl">
       <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
         <span id="transfer-status" class="font-medium text-slate-200">Transferring...</span>
-        <span id="transfer-speed" class="font-mono text-sky-400">0.0 MB/s</span>
+        <span id="transfer-speed" class="font-mono text-sky-400 font-bold">0.0 MB/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden my-2">
         <div id="transfer-bar" class="bg-gradient-to-r from-sky-500 to-cyan-400 h-full w-0 transition-all duration-100"></div>
@@ -103,7 +103,7 @@
   <div id="qr-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl">
       <h3 class="text-base font-bold text-white mb-1">Scan to Connect</h3>
-      <p class="text-xs text-slate-400 mb-4">Point your phone camera here to pair automatically</p>
+      <p class="text-xs text-slate-400 mb-4">Scan with another phone's camera to pair automatically</p>
       <div id="qrcode" class="bg-white p-3 rounded-2xl inline-block shadow-inner mx-auto mb-4"></div>
       <button onclick="toggleQRModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition">Close</button>
     </div>
@@ -153,8 +153,12 @@
   </footer>
 
   <script>
-    const randomCode = 'DW-' + Math.floor(1000 + Math.random() * 9000);
-    let myPeerId = null;
+    // Clean 4-digit PIN between 1000 and 9999
+    const fourDigitPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const APP_NAMESPACE = 'dwpin_';
+    const internalPeerId = APP_NAMESPACE + fourDigitPin;
+
+    let myPin = fourDigitPin;
     let activeConn = null;
     let incomingFileInfo = null;
     let receivedChunks = [];
@@ -164,18 +168,17 @@
     let currentReceivedText = '';
     const CHUNK_SIZE = 64 * 1024;
 
-    // Check if URL has ?connect=DW-XXXX to auto-connect via QR Code
+    // Check if URL has ?connect=XXXX to auto-connect via QR Code
     const urlParams = new URLSearchParams(window.location.search);
     const autoTarget = urlParams.get('connect');
 
-    const peer = new Peer(randomCode, { debug: 1 });
+    const peer = new Peer(internalPeerId, { debug: 1 });
 
-    peer.on('open', (id) => {
-      myPeerId = id;
-      document.getElementById('my-code').innerText = id;
+    peer.on('open', () => {
+      document.getElementById('my-code').innerText = myPin;
 
       // Generate QR Code with pairing URL
-      const qrTarget = `${window.location.origin}${window.location.pathname}?connect=${id}`;
+      const qrTarget = `${window.location.origin}${window.location.pathname}?connect=${myPin}`;
       new QRCode(document.getElementById('qrcode'), {
         text: qrTarget,
         width: 160,
@@ -185,11 +188,16 @@
         correctLevel: QRCode.CorrectLevel.H
       });
 
-      // Auto-connect if scanned QR URL
-      if (autoTarget && autoTarget !== id) {
+      // Auto-connect if opened through scanned QR Code
+      if (autoTarget && autoTarget !== myPin) {
         document.getElementById('target-id').value = autoTarget;
         connectToPeer();
       }
+    });
+
+    // Auto-advance or allow enter key
+    document.getElementById('target-id').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') connectToPeer();
     });
 
     peer.on('connection', (conn) => {
@@ -197,11 +205,16 @@
     });
 
     function connectToPeer() {
-      const targetId = document.getElementById('target-id').value.trim().toUpperCase();
-      if (!targetId) return alert('Enter a target code');
-      if (targetId === myPeerId) return alert("You cannot connect to your own device code!");
+      let targetPin = document.getElementById('target-id').value.trim();
+      if (!targetPin || targetPin.length !== 4) {
+        return alert('Please enter a valid 4-digit PIN (e.g. 5421)');
+      }
+      if (targetPin === myPin) {
+        return alert("You can't connect to your own device PIN!");
+      }
 
-      const conn = peer.connect(targetId, { reliable: true });
+      const fullTargetId = APP_NAMESPACE + targetPin;
+      const conn = peer.connect(fullTargetId, { reliable: true });
       setupConnection(conn);
     }
 
@@ -209,10 +222,11 @@
       activeConn = conn;
 
       conn.on('open', () => {
+        const displayPin = conn.peer.replace(APP_NAMESPACE, '');
         document.getElementById('empty-state').classList.add('hidden');
         document.getElementById('connected-peer').classList.remove('hidden');
         document.getElementById('connected-peer').classList.add('flex');
-        document.getElementById('peer-id-display').innerText = conn.peer;
+        document.getElementById('peer-id-display').innerText = `Paired with PIN: ${displayPin}`;
       });
 
       conn.on('data', (data) => {
@@ -325,7 +339,6 @@
       }
     }
 
-    // Audio chime & haptic vibration
     function playFinishChime() {
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       try {
@@ -343,7 +356,6 @@
       } catch (err) {}
     }
 
-    // Modals & Text Sharing
     function toggleQRModal() {
       document.getElementById('qr-modal').classList.toggle('hidden');
     }
@@ -375,9 +387,9 @@
       closeReceivedTextModal();
     }
     function copyMyCode() {
-      if (myPeerId) {
-        navigator.clipboard.writeText(myPeerId);
-        alert('Copied code: ' + myPeerId);
+      if (myPin) {
+        navigator.clipboard.writeText(myPin);
+        alert('Copied 4-digit PIN: ' + myPin);
       }
     }
   </script>
