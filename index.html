@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DropWave P2P — Fast Local File Sharing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between items-center p-6 selection:bg-sky-500 selection:text-white">
+  
+  <!-- Header -->
+  <header class="text-center my-4">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold mb-3">
+      <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+      Instant P2P Network
+    </div>
+    <h1 class="text-4xl font-black tracking-tight text-white">
+      Drop<span class="text-sky-400">Wave</span>
+    </h1>
+    <p id="my-info" class="text-xs text-slate-400 mt-2 font-mono">Connecting to local signaling network...</p>
+  </header>
+
+  <!-- Radar & Transfer Center -->
+  <main class="w-full max-w-md flex flex-col items-center my-auto">
+    <div id="radar" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-6 mb-4 flex flex-col items-center min-h-[340px] justify-center shadow-2xl relative overflow-hidden">
+      <div id="peer-container" class="grid grid-cols-2 gap-4 w-full z-10"></div>
+      
+      <div id="empty-state" class="text-center py-8 z-10">
+        <div class="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 mx-auto flex items-center justify-center text-sky-400 mb-3 shadow-inner">
+          <svg class="w-7 h-7 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+          </svg>
+        </div>
+        <p class="text-slate-300 font-semibold text-sm">Searching for nearby peers...</p>
+        <p class="text-slate-500 text-xs mt-1 max-w-[240px] mx-auto">Open this link on another phone or PC to immediately connect and transfer</p>
+      </div>
+    </div>
+
+    <!-- Active Transfer Card -->
+    <div id="transfer-box" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 hidden shadow-xl">
+      <div class="flex justify-between items-center text-xs text-slate-400 mb-2">
+        <span id="transfer-status" class="font-medium text-slate-200">Transferring file...</span>
+        <span id="transfer-pct" class="font-mono text-sky-400 font-bold">0%</span>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+        <div id="transfer-bar" class="bg-gradient-to-r from-sky-500 to-cyan-400 h-full w-0 transition-all duration-100"></div>
+      </div>
+    </div>
+  </main>
+
+  <input type="file" id="file-input" class="hidden" />
+
+  <!-- Creator Credits Footer -->
+  <footer class="mt-8 text-center border-t border-slate-800/80 pt-5 w-full max-w-md">
+    <p class="text-xs text-slate-400">
+      Engineered & Developed by <span class="font-bold text-slate-200">D.Dhanush</span>
+    </p>
+    <div class="mt-2.5 flex items-center justify-center">
+      <a href="https://www.instagram.com/dhanushh.07__" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-amber-500/10 border border-pink-500/20 hover:border-pink-500/50 text-pink-400 text-xs transition duration-200">
+        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+        <span class="font-medium">@dhanushh.07__</span>
+      </a>
+    </div>
+    <p class="text-[10px] text-slate-600 mt-2">P2P Encrypted • No Cloud Storage • Unlimited Speed</p>
+  </footer>
+
+  <script>
+    const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${wsProto}//${location.host}`);
+    let myId = null;
+    let selectedPeerId = null;
+    let peerConnections = {};
+    let dataChannels = {};
+    let incomingFileInfo = null;
+    let receivedChunks = [];
+    let receivedBytes = 0;
+
+    const CHUNK_SIZE = 64 * 1024;
+
+    socket.onmessage = async (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === 'init') {
+        myId = msg.id;
+        document.getElementById('my-info').innerText = `You are: ${msg.name} (${msg.device})`;
+      } else if (msg.type === 'peers') {
+        renderPeers(msg.peers);
+      } else if (msg.type === 'offer') {
+        await handleOffer(msg);
+      } else if (msg.type === 'answer') {
+        await peerConnections[msg.sender].setRemoteDescription(new RTCSessionDescription(msg.sdp));
+      } else if (msg.type === 'candidate') {
+        if (peerConnections[msg.sender]) {
+          await peerConnections[msg.sender].addIceCandidate(new RTCIceCandidate(msg.candidate));
+        }
+      }
+    };
+
+    function renderPeers(peers) {
+      const container = document.getElementById('peer-container');
+      const empty = document.getElementById('empty-state');
+      container.innerHTML = '';
+
+      if (!peers.length) {
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      peers.forEach(peer => {
+        const card = document.createElement('div');
+        card.className = "flex flex-col items-center p-4 bg-slate-800/80 hover:bg-slate-700/80 rounded-2xl cursor-pointer border border-slate-700 hover:border-sky-500/50 transition duration-200 shadow-md";
+        card.innerHTML = `
+          <div class="w-12 h-12 bg-sky-500/20 text-sky-400 rounded-full flex items-center justify-center font-black text-lg mb-2">
+            ${peer.name[0]}
+          </div>
+          <div class="font-bold text-sm text-center text-slate-200">${peer.name}</div>
+          <div class="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">${peer.device}</div>
+          <span class="mt-2 text-[10px] text-sky-400 font-medium">Tap to send</span>
+        `;
+        card.onclick = () => {
+          selectedPeerId = peer.id;
+          document.getElementById('file-input').click();
+        };
+        container.appendChild(card);
+      });
+    }
+
+    function createPeerConnection(targetId) {
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.send(JSON.stringify({ type: 'candidate', target: targetId, candidate: event.candidate }));
+        }
+      };
+
+      peerConnections[targetId] = pc;
+      return pc;
+    }
+
+    async function handleOffer(msg) {
+      const pc = createPeerConnection(msg.sender);
+
+      pc.ondatachannel = (event) => {
+        const dc = event.channel;
+        setupDataChannel(dc, msg.sender);
+      };
+
+      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      socket.send(JSON.stringify({ type: 'answer', target: msg.sender, sdp: answer }));
+    }
+
+    function setupDataChannel(dc, peerId) {
+      dataChannels[peerId] = dc;
+      dc.binaryType = 'arraybuffer';
+
+      dc.onmessage = (event) => {
+        if (typeof event.data === 'string') {
+          const meta = JSON.parse(event.data);
+          if (meta.type === 'header') {
+            incomingFileInfo = meta;
+            receivedChunks = [];
+            receivedBytes = 0;
+            showTransferUI(true, `Receiving ${meta.name}`);
+          }
+        } else {
+          receivedChunks.push(event.data);
+          receivedBytes += event.data.byteLength;
+          const pct = Math.round((receivedBytes / incomingFileInfo.size) * 100);
+          updateProgress(pct);
+
+          if (receivedBytes >= incomingFileInfo.size) {
+            downloadReceivedFile();
+            showTransferUI(false);
+          }
+        }
+      };
+    }
+
+    function downloadReceivedFile() {
+      const blob = new Blob(receivedChunks, { type: incomingFileInfo.mime || 'application/octet-stream' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = incomingFileInfo.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    document.getElementById('file-input').onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file || !selectedPeerId) return;
+
+      const pc = createPeerConnection(selectedPeerId);
+      const dc = pc.createDataChannel('fileshare');
+      setupDataChannel(dc, selectedPeerId);
+
+      dc.onopen = () => {
+        sendFile(file, dc);
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.send(JSON.stringify({ type: 'offer', target: selectedPeerId, sdp: offer }));
+    };
+
+    function sendFile(file, dc) {
+      showTransferUI(true, `Sending ${file.name}`);
+      dc.send(JSON.stringify({ type: 'header', name: file.name, size: file.size, mime: file.type }));
+
+      let offset = 0;
+      const fileReader = new FileReader();
+
+      const readSlice = (o) => {
+        const slice = file.slice(o, o + CHUNK_SIZE);
+        fileReader.readAsArrayBuffer(slice);
+      };
+
+      fileReader.onload = (e) => {
+        if (dc.bufferedAmount > 8 * 1024 * 1024) {
+          setTimeout(() => fileReader.onload(e), 50);
+          return;
+        }
+        dc.send(e.target.result);
+        offset += e.target.result.byteLength;
+        const pct = Math.round((offset / file.size) * 100);
+        updateProgress(pct);
+
+        if (offset < file.size) {
+          readSlice(offset);
+        } else {
+          showTransferUI(false);
+        }
+      };
+
+      readSlice(0);
+    }
+
+    function showTransferUI(show, statusText = '') {
+      const box = document.getElementById('transfer-box');
+      if (show) {
+        box.classList.remove('hidden');
+        document.getElementById('transfer-status').innerText = statusText;
+      } else {
+        setTimeout(() => box.classList.add('hidden'), 2000);
+      }
+    }
+
+    function updateProgress(pct) {
+      document.getElementById('transfer-bar').style.width = pct + '%';
+      document.getElementById('transfer-pct').innerText = pct + '%';
+    }
+  </script>
+</body>
+</html>
