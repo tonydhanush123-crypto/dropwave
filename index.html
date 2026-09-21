@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DropWave P2P — Fast Local File & Media Sharing</title>
+  <title>DropWave P2P — Multi-Peer Mesh & Secure File Sharing</title>
   <meta name="theme-color" content="#020617" />
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- PeerJS Engine -->
@@ -20,15 +20,15 @@
     <div class="w-20 h-20 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center text-4xl mb-4 animate-bounce">
       📂
     </div>
-    <h2 class="text-2xl font-black text-white">Drop Files to Send!</h2>
-    <p class="text-sky-300 text-sm mt-1">Files will queue and transfer instantly to your connected peer</p>
+    <h2 class="text-2xl font-black text-white">Drop to Broadcast!</h2>
+    <p class="text-sky-300 text-sm mt-1">Files will queue and prompt all connected devices</p>
   </div>
 
   <!-- Header -->
   <header class="text-center my-3 w-full max-w-md">
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold mb-2">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      Direct WebRTC Network
+      Multi-Peer Mesh P2P
     </div>
 
     <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
@@ -59,16 +59,16 @@
     
     <!-- Connect Box -->
     <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
-      <label class="text-xs font-semibold text-slate-300 mb-1.5 block">Connect to Target PIN:</label>
+      <label class="text-xs font-semibold text-slate-300 mb-1.5 block">Connect to Another Device PIN:</label>
       <div class="flex gap-2">
         <input id="target-id" type="tel" maxlength="4" placeholder="4-digit PIN" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-center text-lg font-mono font-bold tracking-widest text-slate-100 focus:outline-none focus:border-sky-500" />
-        <button id="connect-btn" onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition">Pair</button>
+        <button id="connect-btn" onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition">Add Peer</button>
       </div>
       <p id="connection-status" class="text-[11px] text-slate-400 mt-2 text-center hidden"></p>
     </div>
 
-    <!-- Pairing & Status Panel -->
-    <div id="radar" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center shadow-2xl relative min-h-[200px]">
+    <!-- Connected Mesh Panel -->
+    <div id="radar" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center shadow-2xl relative min-h-[190px]">
       
       <!-- Empty State -->
       <div id="empty-state" class="text-center py-2">
@@ -77,26 +77,30 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
           </svg>
         </div>
-        <p class="text-slate-300 font-semibold text-sm">No device paired yet</p>
-        <p class="text-slate-500 text-xs mt-0.5">Type PIN or scan QR code above to connect</p>
+        <p class="text-slate-300 font-semibold text-sm">Mesh is empty</p>
+        <p class="text-slate-500 text-xs mt-0.5">Pair one or more devices via PIN or QR code</p>
       </div>
 
-      <!-- Connected State -->
-      <div id="connected-peer" class="hidden flex-col items-center w-full">
-        <div class="w-14 h-14 bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-full flex items-center justify-center text-2xl mb-2 shadow-lg animate-bounce">
-          ⚡
+      <!-- Connected State (Multi-Peer Mesh) -->
+      <div id="connected-mesh" class="hidden flex-col items-center w-full">
+        <div class="flex items-center justify-between w-full mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Connected Peers (<span id="peer-count">0</span>)</span>
+          </div>
         </div>
-        <div class="font-bold text-sm text-slate-200">Devices Connected!</div>
-        <div id="peer-id-display" class="text-xs font-mono text-emerald-400 mb-3 tracking-wider font-semibold"></div>
+
+        <!-- Peer Badges -->
+        <div id="peer-list" class="flex flex-wrap gap-2 w-full mb-4"></div>
 
         <div class="grid grid-cols-2 gap-2 w-full">
           <button onclick="document.getElementById('file-input').click()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 px-3 rounded-xl transition shadow text-xs sm:text-sm flex items-center justify-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            Send Files
+            Broadcast Files
           </button>
           <button onclick="openTextModal()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold py-3 px-3 rounded-xl border border-slate-700 transition shadow text-xs sm:text-sm flex items-center justify-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-            Send Text
+            Broadcast Text
           </button>
         </div>
       </div>
@@ -123,13 +127,32 @@
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Transfer History</h3>
         <button onclick="clearHistory()" class="text-[10px] text-slate-500 hover:text-slate-400">Clear</button>
       </div>
-      <div id="history-container" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+      <div id="history-container" class="space-y-2 max-h-36 overflow-y-auto pr-1">
         <p id="empty-history" class="text-xs text-slate-600 text-center py-2">No transferred files yet</p>
       </div>
     </div>
   </main>
 
   <input type="file" id="file-input" class="hidden" multiple />
+
+  <!-- Incoming Transfer Approval Modal -->
+  <div id="approval-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-xs w-full shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl mx-auto mb-3">
+        📥
+      </div>
+      <h3 class="text-sm font-bold text-white mb-1">Incoming Transfer Request</h3>
+      <p class="text-xs text-slate-400 mb-3"><span id="req-sender" class="font-mono text-sky-400 font-semibold">Peer</span> wants to send:</p>
+      <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4 text-left">
+        <p id="req-filename" class="text-xs font-semibold text-slate-200 truncate mb-0.5">Filename.png</p>
+        <p id="req-filesize" class="text-[11px] text-slate-500">0.0 MB</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="respondToTransfer(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Decline</button>
+        <button onclick="respondToTransfer(true)" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition">Accept</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Camera QR Scanner Modal -->
   <div id="scanner-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -145,7 +168,7 @@
   <div id="qr-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl">
       <h3 class="text-base font-bold text-white mb-1">Pairing QR Code</h3>
-      <p class="text-xs text-slate-400 mb-4">Scan with another phone's camera to pair automatically</p>
+      <p class="text-xs text-slate-400 mb-4">Scan with another device to join the mesh</p>
       <div id="qrcode" class="bg-white p-3 rounded-2xl inline-block shadow-inner mx-auto mb-4"></div>
       <button onclick="toggleQRModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition">Close</button>
     </div>
@@ -154,11 +177,11 @@
   <!-- Text / Clipboard Modal -->
   <div id="text-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full shadow-2xl">
-      <h3 class="text-base font-bold text-white mb-2">Send Clipboard / Text</h3>
+      <h3 class="text-base font-bold text-white mb-2">Broadcast Clipboard / Text</h3>
       <textarea id="text-message" rows="4" placeholder="Paste link, message, or notes..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-sky-500 mb-3"></textarea>
       <div class="flex gap-2">
         <button onclick="closeTextModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Cancel</button>
-        <button onclick="sendTextMessage()" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition">Send Text</button>
+        <button onclick="sendTextMessage()" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition">Broadcast</button>
       </div>
     </div>
   </div>
@@ -168,7 +191,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full shadow-2xl">
       <div class="flex items-center gap-2 mb-2 text-sky-400">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <h3 class="text-sm font-bold text-white">Received Message</h3>
+        <h3 class="text-sm font-bold text-white">Broadcast Message</h3>
       </div>
       <div id="received-text-content" class="bg-slate-950 p-3 rounded-xl text-sm font-mono text-slate-200 break-all max-h-48 overflow-y-auto mb-3 border border-slate-800"></div>
       <div class="flex gap-2">
@@ -195,21 +218,15 @@
   </footer>
 
   <script>
-    // 1. Clear any stuck Service Workers from previous runs
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-          registration.unregister();
-        }
-      });
-    }
-
-    // 2. Generate a random clean 4-digit PIN
     let myPin = Math.floor(1000 + Math.random() * 9000).toString();
-    const APP_NAMESPACE = 'dropwave_v2_';
+    const APP_NAMESPACE = 'dropwave_mesh_';
 
     let peer = null;
-    let activeConn = null;
+    // Multi-Peer Mesh Connection Map: { [peerId]: conn }
+    let meshConnections = new Map();
+    
+    // Approval & Transfer State
+    let pendingRequest = null;
     let incomingFileInfo = null;
     let receivedChunks = [];
     let receivedBytes = 0;
@@ -241,7 +258,6 @@
         document.getElementById('my-code').innerText = myPin;
         generateQR(myPin);
 
-        // Check if opened via QR scan query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const autoTarget = urlParams.get('connect');
         if (autoTarget && autoTarget !== myPin) {
@@ -250,22 +266,18 @@
         }
       });
 
-      peer.on('connection', (conn) => {
-        setupConnection(conn);
-      });
+      peer.on('connection', (conn) => setupConnection(conn));
 
       peer.on('error', (err) => {
         console.warn('Peer error:', err);
         if (err.type === 'unavailable-id') {
-          // If PIN collision happened on PeerJS cloud, re-roll a new PIN immediately
           myPin = Math.floor(1000 + Math.random() * 9000).toString();
           initPeer(myPin);
         } else if (err.type === 'peer-unavailable') {
-          setStatus('Peer not found. Check the 4-digit PIN and retry.', 'text-rose-400');
-          document.getElementById('connect-btn').innerText = 'Pair';
+          setStatus('Peer not found. Check PIN and retry.', 'text-rose-400');
           document.getElementById('connect-btn').disabled = false;
         } else {
-          setStatus('Network note: ' + err.type, 'text-amber-400');
+          setStatus('Note: ' + err.type, 'text-amber-400');
         }
       });
     }
@@ -293,44 +305,41 @@
     function connectToPeer() {
       const targetPin = document.getElementById('target-id').value.trim();
       if (!targetPin || targetPin.length !== 4) return alert('Enter a 4-digit PIN');
-      if (targetPin === myPin) return alert("You cannot connect to your own device PIN!");
-
-      setStatus('Connecting to PIN ' + targetPin + '...', 'text-sky-400');
-      document.getElementById('connect-btn').innerText = 'Connecting...';
-      document.getElementById('connect-btn').disabled = true;
+      if (targetPin === myPin) return alert("Cannot connect to your own PIN!");
 
       const fullTargetId = APP_NAMESPACE + targetPin;
+      if (meshConnections.has(fullTargetId)) return alert('Already connected to this PIN!');
+
+      setStatus('Connecting to ' + targetPin + '...', 'text-sky-400');
+      document.getElementById('connect-btn').disabled = true;
+
       const conn = peer.connect(fullTargetId);
       setupConnection(conn);
     }
 
-    // Solves the connection race condition
     function setupConnection(conn) {
-      activeConn = conn;
-
       function onConnected() {
-        const displayPin = conn.peer.replace(APP_NAMESPACE, '');
-        document.getElementById('empty-state').classList.add('hidden');
-        document.getElementById('connected-peer').classList.remove('hidden');
-        document.getElementById('connected-peer').classList.add('flex');
-        document.getElementById('peer-id-display').innerText = `Paired with PIN: ${displayPin}`;
-        document.getElementById('connect-btn').innerText = 'Paired';
+        meshConnections.set(conn.peer, conn);
+        updateMeshUI();
+        document.getElementById('target-id').value = '';
         document.getElementById('connect-btn').disabled = false;
-        setStatus('Successfully connected!', 'text-emerald-400');
+        setStatus('Mesh updated!', 'text-emerald-400');
         playFinishChime();
       }
 
-      // Check if channel is already open or listen to open event
-      if (conn.open) {
-        onConnected();
-      } else {
-        conn.on('open', onConnected);
-      }
+      if (conn.open) onConnected();
+      else conn.on('open', onConnected);
 
       conn.on('data', (data) => {
         if (typeof data === 'string') {
           const msg = JSON.parse(data);
-          if (msg.type === 'header') {
+
+          // 1. Transfer Request (Feature 2: Approval Modal)
+          if (msg.type === 'request_transfer') {
+            promptApproval(conn, msg);
+          } else if (msg.type === 'response_transfer') {
+            handleTransferResponse(conn, msg);
+          } else if (msg.type === 'header') {
             incomingFileInfo = msg;
             receivedChunks = [];
             receivedBytes = 0;
@@ -356,19 +365,39 @@
       });
 
       conn.on('close', () => {
-        document.getElementById('empty-state').classList.remove('hidden');
-        document.getElementById('connected-peer').classList.add('hidden');
-        document.getElementById('connected-peer').classList.remove('flex');
-        document.getElementById('connect-btn').innerText = 'Pair';
-        document.getElementById('connect-btn').disabled = false;
-        setStatus('Device disconnected.', 'text-slate-400');
+        meshConnections.delete(conn.peer);
+        updateMeshUI();
       });
 
-      conn.on('error', (err) => {
-        console.error('Connection error:', err);
-        setStatus('Connection error. Please try pairing again.', 'text-rose-400');
-        document.getElementById('connect-btn').innerText = 'Pair';
-        document.getElementById('connect-btn').disabled = false;
+      conn.on('error', () => {
+        meshConnections.delete(conn.peer);
+        updateMeshUI();
+      });
+    }
+
+    function updateMeshUI() {
+      const count = meshConnections.size;
+      document.getElementById('peer-count').innerText = count;
+
+      if (count === 0) {
+        document.getElementById('empty-state').classList.remove('hidden');
+        document.getElementById('connected-mesh').classList.add('hidden');
+        document.getElementById('connected-mesh').classList.remove('flex');
+        return;
+      }
+
+      document.getElementById('empty-state').classList.add('hidden');
+      document.getElementById('connected-mesh').classList.remove('hidden');
+      document.getElementById('connected-mesh').classList.add('flex');
+
+      const peerListEl = document.getElementById('peer-list');
+      peerListEl.innerHTML = '';
+      meshConnections.forEach((_, peerId) => {
+        const pin = peerId.replace(APP_NAMESPACE, '');
+        const badge = document.createElement('div');
+        badge.className = "flex items-center gap-1.5 bg-slate-800/90 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-mono text-sky-400";
+        badge.innerHTML = `<span>📱 PIN: ${pin}</span>`;
+        peerListEl.appendChild(badge);
       });
     }
 
@@ -379,20 +408,45 @@
       el.classList.remove('hidden');
     }
 
-    // Multi-File Queue Engine
-    document.getElementById('file-input').onchange = (e) => {
-      const files = Array.from(e.target.files);
-      if (!files.length || !activeConn) return;
-      enqueueFiles(files);
-    };
-
-    function enqueueFiles(files) {
-      outgoingQueue = files;
-      currentSendingIndex = 0;
-      processNextInQueue();
+    // Feature 2: Approval Flow
+    function promptApproval(conn, msg) {
+      pendingRequest = { conn, msg };
+      document.getElementById('req-sender').innerText = 'PIN ' + conn.peer.replace(APP_NAMESPACE, '');
+      document.getElementById('req-filename').innerText = msg.name;
+      document.getElementById('req-filesize').innerText = (msg.size / (1024 * 1024)).toFixed(2) + ' MB';
+      document.getElementById('approval-modal').classList.remove('hidden');
     }
 
-    function processNextInQueue() {
+    function respondToTransfer(accepted) {
+      document.getElementById('approval-modal').classList.add('hidden');
+      if (!pendingRequest) return;
+      pendingRequest.conn.send(JSON.stringify({
+        type: 'response_transfer',
+        accepted: accepted,
+        fileId: pendingRequest.msg.fileId
+      }));
+      if (!accepted) pendingRequest = null;
+    }
+
+    function handleTransferResponse(conn, msg) {
+      if (msg.accepted) {
+        startSendingActiveFile();
+      } else {
+        alert('File transfer was declined by ' + conn.peer.replace(APP_NAMESPACE, ''));
+        showTransferUI(false);
+      }
+    }
+
+    // Outgoing File Queue & Broadcasting (Feature 5: Multi-Peer Mesh)
+    document.getElementById('file-input').onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length || meshConnections.size === 0) return;
+      outgoingQueue = files;
+      currentSendingIndex = 0;
+      requestTransferForCurrentFile();
+    };
+
+    function requestTransferForCurrentFile() {
       if (currentSendingIndex >= outgoingQueue.length) {
         showTransferUI(false);
         playFinishChime();
@@ -401,17 +455,35 @@
       }
 
       const file = outgoingQueue[currentSendingIndex];
-      showTransferUI(true, `Sending: ${file.name}`);
+      showTransferUI(true, `Awaiting approval for: ${file.name}`);
+
+      // Broadcast transfer request to all mesh peers
+      meshConnections.forEach(conn => {
+        conn.send(JSON.stringify({
+          type: 'request_transfer',
+          name: file.name,
+          size: file.size,
+          mime: file.type,
+          fileId: currentSendingIndex
+        }));
+      });
+    }
+
+    function startSendingActiveFile() {
+      const file = outgoingQueue[currentSendingIndex];
+      showTransferUI(true, `Broadcasting: ${file.name}`);
       document.getElementById('transfer-queue-status').innerText = `File ${currentSendingIndex + 1} of ${outgoingQueue.length}`;
 
-      activeConn.send(JSON.stringify({
-        type: 'header',
-        name: file.name,
-        size: file.size,
-        mime: file.type,
-        index: currentSendingIndex + 1,
-        total: outgoingQueue.length
-      }));
+      meshConnections.forEach(conn => {
+        conn.send(JSON.stringify({
+          type: 'header',
+          name: file.name,
+          size: file.size,
+          mime: file.type,
+          index: currentSendingIndex + 1,
+          total: outgoingQueue.length
+        }));
+      });
 
       let offset = 0;
       lastTime = Date.now();
@@ -424,7 +496,10 @@
       };
 
       fileReader.onload = (evt) => {
-        activeConn.send(evt.target.result);
+        meshConnections.forEach(conn => {
+          if (conn.open) conn.send(evt.target.result);
+        });
+
         offset += evt.target.result.byteLength;
         calculateSpeed(offset, file.size);
 
@@ -433,7 +508,7 @@
         } else {
           addHistoryItem(file.name, file.size, file.type, null, 'Sent');
           currentSendingIndex++;
-          setTimeout(processNextInQueue, 150);
+          setTimeout(requestTransferForCurrentFile, 200);
         }
       };
 
@@ -475,11 +550,11 @@
       const sizeMB = (size / (1024 * 1024)).toFixed(1);
 
       const div = document.createElement('div');
-      div.className = "bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-xs";
+      div.className = "bg-slate-950/80 border border-slate-800 rounded-xl p-2 flex items-center justify-between text-xs";
       
-      let previewEl = `<div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-sm font-bold mr-2 shrink-0">📄</div>`;
+      let previewEl = `<div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-xs font-bold mr-2 shrink-0">📄</div>`;
       if (mime && mime.startsWith('image/') && blobUrl) {
-        previewEl = `<img src="${blobUrl}" class="w-8 h-8 rounded-lg object-cover mr-2 border border-slate-700 shrink-0" />`;
+        previewEl = `<img src="${blobUrl}" class="w-7 h-7 rounded-lg object-cover mr-2 border border-slate-700 shrink-0" />`;
       }
 
       div.innerHTML = `
@@ -490,7 +565,7 @@
             <div class="text-[10px] text-slate-500">${sizeMB} MB • <span class="${type === 'Sent' ? 'text-sky-400' : 'text-emerald-400'} font-semibold">${type}</span></div>
           </div>
         </div>
-        ${blobUrl ? `<a href="${blobUrl}" download="${name}" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-2.5 py-1 rounded text-[11px] font-medium transition whitespace-nowrap">Save</a>` : ''}
+        ${blobUrl ? `<a href="${blobUrl}" download="${name}" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-2 py-0.5 rounded text-[10px] font-medium transition whitespace-nowrap">Save</a>` : ''}
       `;
       container.prepend(div);
     }
@@ -499,7 +574,7 @@
       document.getElementById('history-container').innerHTML = '<p id="empty-history" class="text-xs text-slate-600 text-center py-2">No transferred files yet</p>';
     }
 
-    // Drag & Drop Handling
+    // Drag & Drop
     window.addEventListener('dragover', (e) => {
       e.preventDefault();
       document.getElementById('drop-overlay').classList.remove('hidden');
@@ -514,12 +589,16 @@
 
     window.addEventListener('drop', (e) => {
       e.preventDefault();
-      if (!activeConn) return alert('Pair with a device first before dropping files!');
+      if (meshConnections.size === 0) return alert('Connect at least one device first!');
       const files = Array.from(e.dataTransfer.files);
-      if (files.length) enqueueFiles(files);
+      if (files.length) {
+        outgoingQueue = files;
+        currentSendingIndex = 0;
+        requestTransferForCurrentFile();
+      }
     });
 
-    // In-Browser QR Scanner
+    // Camera Scanner
     function openScannerModal() {
       document.getElementById('scanner-modal').classList.remove('hidden');
       html5QrCode = new Html5Qrcode("reader");
@@ -563,11 +642,13 @@
     
     function sendTextMessage() {
       const text = document.getElementById('text-message').value.trim();
-      if (!text || !activeConn) return;
-      activeConn.send(JSON.stringify({ type: 'text', text }));
+      if (!text || meshConnections.size === 0) return;
+      meshConnections.forEach(conn => {
+        if (conn.open) conn.send(JSON.stringify({ type: 'text', text }));
+      });
       document.getElementById('text-message').value = '';
       closeTextModal();
-      alert('Message sent!');
+      alert('Broadcasted message to all peers!');
     }
 
     function showReceivedText(text) {
