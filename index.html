@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DropWave P2P — Fast Local File & Media Sharing</title>
-  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#020617" />
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- PeerJS Engine -->
@@ -27,17 +26,12 @@
 
   <!-- Header -->
   <header class="text-center my-3 w-full max-w-md">
-    <div class="flex items-center justify-between">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold">
-        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-        Serverless P2P Pro
-      </div>
-      <button id="pwa-install-btn" class="hidden text-xs bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-3 py-1 rounded-full transition shadow">
-        📲 Install App
-      </button>
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold mb-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      Direct WebRTC Network
     </div>
 
-    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white mt-2">
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
       Drop<span class="text-sky-400">Wave</span>
     </h1>
 
@@ -45,13 +39,13 @@
     <div class="mt-3 inline-flex items-center justify-between w-full bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-lg">
       <div class="flex items-center gap-2">
         <span class="text-xs text-slate-400">Your PIN:</span>
-        <span id="my-code" class="text-lg font-mono font-black text-sky-400 tracking-widest">----</span>
+        <span id="my-code" class="text-lg font-mono font-black text-sky-400 tracking-widest">Connecting...</span>
       </div>
       <div class="flex items-center gap-1.5">
         <button onclick="copyMyCode()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition font-medium">Copy</button>
         <button onclick="toggleQRModal()" class="text-[11px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-          Show QR
+          QR
         </button>
         <button onclick="openScannerModal()" class="text-[11px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
           📷 Scan
@@ -68,11 +62,12 @@
       <label class="text-xs font-semibold text-slate-300 mb-1.5 block">Connect to Target PIN:</label>
       <div class="flex gap-2">
         <input id="target-id" type="tel" maxlength="4" placeholder="4-digit PIN" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-center text-lg font-mono font-bold tracking-widest text-slate-100 focus:outline-none focus:border-sky-500" />
-        <button onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition">Pair</button>
+        <button id="connect-btn" onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition">Pair</button>
       </div>
+      <p id="connection-status" class="text-[11px] text-slate-400 mt-2 text-center hidden"></p>
     </div>
 
-    <!-- Radar / Pairing Panel -->
+    <!-- Pairing & Status Panel -->
     <div id="radar" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center shadow-2xl relative min-h-[200px]">
       
       <!-- Empty State -->
@@ -82,8 +77,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
           </svg>
         </div>
-        <p class="text-slate-300 font-semibold text-sm">No device connected</p>
-        <p class="text-slate-500 text-xs mt-0.5">Scan QR or enter 4-digit PIN to begin</p>
+        <p class="text-slate-300 font-semibold text-sm">No device paired yet</p>
+        <p class="text-slate-500 text-xs mt-0.5">Type PIN or scan QR code above to connect</p>
       </div>
 
       <!-- Connected State -->
@@ -91,8 +86,8 @@
         <div class="w-14 h-14 bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-full flex items-center justify-center text-2xl mb-2 shadow-lg animate-bounce">
           ⚡
         </div>
-        <div class="font-bold text-sm text-slate-200">Device Linked</div>
-        <div id="peer-id-display" class="text-xs font-mono text-sky-400 mb-3 tracking-wider"></div>
+        <div class="font-bold text-sm text-slate-200">Devices Connected!</div>
+        <div id="peer-id-display" class="text-xs font-mono text-emerald-400 mb-3 tracking-wider font-semibold"></div>
 
         <div class="grid grid-cols-2 gap-2 w-full">
           <button onclick="document.getElementById('file-input').click()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 px-3 rounded-xl transition shadow text-xs sm:text-sm flex items-center justify-center gap-1.5">
@@ -122,14 +117,14 @@
       </div>
     </div>
 
-    <!-- History & In-Browser Media Previews -->
+    <!-- Transfer History Log -->
     <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
       <div class="flex justify-between items-center mb-2">
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Transfer History</h3>
         <button onclick="clearHistory()" class="text-[10px] text-slate-500 hover:text-slate-400">Clear</button>
       </div>
-      <div id="history-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-        <p id="empty-history" class="text-xs text-slate-600 text-center py-3">No transferred files yet</p>
+      <div id="history-container" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+        <p id="empty-history" class="text-xs text-slate-600 text-center py-2">No transferred files yet</p>
       </div>
     </div>
   </main>
@@ -150,7 +145,7 @@
   <div id="qr-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl">
       <h3 class="text-base font-bold text-white mb-1">Pairing QR Code</h3>
-      <p class="text-xs text-slate-400 mb-4">Scan with another phone's camera or DropWave scanner</p>
+      <p class="text-xs text-slate-400 mb-4">Scan with another phone's camera to pair automatically</p>
       <div id="qrcode" class="bg-white p-3 rounded-2xl inline-block shadow-inner mx-auto mb-4"></div>
       <button onclick="toggleQRModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition">Close</button>
     </div>
@@ -200,12 +195,20 @@
   </footer>
 
   <script>
-    // 1. PIN & PeerJS Setup
-    const fourDigitPin = Math.floor(1000 + Math.random() * 9000).toString();
-    const APP_NAMESPACE = 'dwpin_';
-    const internalPeerId = APP_NAMESPACE + fourDigitPin;
+    // 1. Clear any stuck Service Workers from previous runs
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
 
-    let myPin = fourDigitPin;
+    // 2. Generate a random clean 4-digit PIN
+    let myPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const APP_NAMESPACE = 'dropwave_v2_';
+
+    let peer = null;
     let activeConn = null;
     let incomingFileInfo = null;
     let receivedChunks = [];
@@ -215,28 +218,65 @@
     let currentReceivedText = '';
     const CHUNK_SIZE = 64 * 1024;
 
-    // Multi-File Outgoing Queue
     let outgoingQueue = [];
     let currentSendingIndex = 0;
-
-    // History Log Array
-    let transferHistory = [];
-
-    // QR scanner instance
     let html5QrCode = null;
 
-    // Check auto-connect params from QR URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const autoTarget = urlParams.get('connect');
+    function initPeer(pin) {
+      if (peer) peer.destroy();
 
-    const peer = new Peer(internalPeerId, { debug: 1 });
+      peer = new Peer(APP_NAMESPACE + pin, {
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ]
+        },
+        debug: 1
+      });
 
-    peer.on('open', () => {
-      document.getElementById('my-code').innerText = myPin;
+      peer.on('open', (id) => {
+        myPin = id.replace(APP_NAMESPACE, '');
+        document.getElementById('my-code').innerText = myPin;
+        generateQR(myPin);
 
-      // QR Code with Auto-Pairing URL
-      const qrTarget = `${window.location.origin}${window.location.pathname}?connect=${myPin}`;
-      new QRCode(document.getElementById('qrcode'), {
+        // Check if opened via QR scan query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoTarget = urlParams.get('connect');
+        if (autoTarget && autoTarget !== myPin) {
+          document.getElementById('target-id').value = autoTarget;
+          connectToPeer();
+        }
+      });
+
+      peer.on('connection', (conn) => {
+        setupConnection(conn);
+      });
+
+      peer.on('error', (err) => {
+        console.warn('Peer error:', err);
+        if (err.type === 'unavailable-id') {
+          // If PIN collision happened on PeerJS cloud, re-roll a new PIN immediately
+          myPin = Math.floor(1000 + Math.random() * 9000).toString();
+          initPeer(myPin);
+        } else if (err.type === 'peer-unavailable') {
+          setStatus('Peer not found. Check the 4-digit PIN and retry.', 'text-rose-400');
+          document.getElementById('connect-btn').innerText = 'Pair';
+          document.getElementById('connect-btn').disabled = false;
+        } else {
+          setStatus('Network note: ' + err.type, 'text-amber-400');
+        }
+      });
+    }
+
+    initPeer(myPin);
+
+    function generateQR(pin) {
+      const qrel = document.getElementById('qrcode');
+      qrel.innerHTML = '';
+      const qrTarget = `${window.location.origin}${window.location.pathname}?connect=${pin}`;
+      new QRCode(qrel, {
         text: qrTarget,
         width: 160,
         height: 160,
@@ -244,40 +284,48 @@
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
       });
-
-      if (autoTarget && autoTarget !== myPin) {
-        document.getElementById('target-id').value = autoTarget;
-        connectToPeer();
-      }
-    });
+    }
 
     document.getElementById('target-id').addEventListener('keyup', (e) => {
       if (e.key === 'Enter') connectToPeer();
     });
 
-    peer.on('connection', (conn) => setupConnection(conn));
-
     function connectToPeer() {
-      let targetPin = document.getElementById('target-id').value.trim();
+      const targetPin = document.getElementById('target-id').value.trim();
       if (!targetPin || targetPin.length !== 4) return alert('Enter a 4-digit PIN');
-      if (targetPin === myPin) return alert("Cannot connect to your own PIN!");
+      if (targetPin === myPin) return alert("You cannot connect to your own device PIN!");
+
+      setStatus('Connecting to PIN ' + targetPin + '...', 'text-sky-400');
+      document.getElementById('connect-btn').innerText = 'Connecting...';
+      document.getElementById('connect-btn').disabled = true;
 
       const fullTargetId = APP_NAMESPACE + targetPin;
-      const conn = peer.connect(fullTargetId, { reliable: true });
+      const conn = peer.connect(fullTargetId);
       setupConnection(conn);
     }
 
+    // Solves the connection race condition
     function setupConnection(conn) {
       activeConn = conn;
 
-      conn.on('open', () => {
+      function onConnected() {
         const displayPin = conn.peer.replace(APP_NAMESPACE, '');
         document.getElementById('empty-state').classList.add('hidden');
         document.getElementById('connected-peer').classList.remove('hidden');
         document.getElementById('connected-peer').classList.add('flex');
         document.getElementById('peer-id-display').innerText = `Paired with PIN: ${displayPin}`;
+        document.getElementById('connect-btn').innerText = 'Paired';
+        document.getElementById('connect-btn').disabled = false;
+        setStatus('Successfully connected!', 'text-emerald-400');
         playFinishChime();
-      });
+      }
+
+      // Check if channel is already open or listen to open event
+      if (conn.open) {
+        onConnected();
+      } else {
+        conn.on('open', onConnected);
+      }
 
       conn.on('data', (data) => {
         if (typeof data === 'string') {
@@ -289,7 +337,7 @@
             lastTime = Date.now();
             lastBytes = 0;
             showTransferUI(true, `Receiving: ${msg.name}`);
-            document.getElementById('transfer-queue-status').innerText = `Batch Item ${msg.index || 1} of ${msg.total || 1}`;
+            document.getElementById('transfer-queue-status').innerText = `Batch ${msg.index || 1} of ${msg.total || 1}`;
           } else if (msg.type === 'text') {
             playFinishChime();
             showReceivedText(msg.text);
@@ -311,11 +359,27 @@
         document.getElementById('empty-state').classList.remove('hidden');
         document.getElementById('connected-peer').classList.add('hidden');
         document.getElementById('connected-peer').classList.remove('flex');
-        alert('Device disconnected.');
+        document.getElementById('connect-btn').innerText = 'Pair';
+        document.getElementById('connect-btn').disabled = false;
+        setStatus('Device disconnected.', 'text-slate-400');
+      });
+
+      conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        setStatus('Connection error. Please try pairing again.', 'text-rose-400');
+        document.getElementById('connect-btn').innerText = 'Pair';
+        document.getElementById('connect-btn').disabled = false;
       });
     }
 
-    // 2. Multi-File Queue Manager
+    function setStatus(text, colorClass) {
+      const el = document.getElementById('connection-status');
+      el.className = `text-[11px] mt-2 text-center ${colorClass}`;
+      el.innerText = text;
+      el.classList.remove('hidden');
+    }
+
+    // Multi-File Queue Engine
     document.getElementById('file-input').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (!files.length || !activeConn) return;
@@ -369,7 +433,7 @@
         } else {
           addHistoryItem(file.name, file.size, file.type, null, 'Sent');
           currentSendingIndex++;
-          setTimeout(processNextInQueue, 200);
+          setTimeout(processNextInQueue, 150);
         }
       };
 
@@ -405,7 +469,6 @@
       addHistoryItem(incomingFileInfo.name, incomingFileInfo.size, incomingFileInfo.mime, url, 'Received');
     }
 
-    // 3. History & Preview Component
     function addHistoryItem(name, size, mime, blobUrl, type) {
       document.getElementById('empty-history')?.remove();
       const container = document.getElementById('history-container');
@@ -414,9 +477,9 @@
       const div = document.createElement('div');
       div.className = "bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-xs";
       
-      let previewEl = `<div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-sm font-bold mr-2">📄</div>`;
-      if (mime.startsWith('image/') && blobUrl) {
-        previewEl = `<img src="${blobUrl}" class="w-8 h-8 rounded-lg object-cover mr-2 border border-slate-700" />`;
+      let previewEl = `<div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-sm font-bold mr-2 shrink-0">📄</div>`;
+      if (mime && mime.startsWith('image/') && blobUrl) {
+        previewEl = `<img src="${blobUrl}" class="w-8 h-8 rounded-lg object-cover mr-2 border border-slate-700 shrink-0" />`;
       }
 
       div.innerHTML = `
@@ -424,7 +487,7 @@
           ${previewEl}
           <div class="truncate">
             <div class="font-semibold text-slate-200 truncate">${name}</div>
-            <div class="text-[10px] text-slate-500">${sizeMB} MB • <span class="${type === 'Sent' ? 'text-sky-400' : 'text-emerald-400'}">${type}</span></div>
+            <div class="text-[10px] text-slate-500">${sizeMB} MB • <span class="${type === 'Sent' ? 'text-sky-400' : 'text-emerald-400'} font-semibold">${type}</span></div>
           </div>
         </div>
         ${blobUrl ? `<a href="${blobUrl}" download="${name}" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-2.5 py-1 rounded text-[11px] font-medium transition whitespace-nowrap">Save</a>` : ''}
@@ -433,10 +496,10 @@
     }
 
     function clearHistory() {
-      document.getElementById('history-container').innerHTML = '<p id="empty-history" class="text-xs text-slate-600 text-center py-3">No transferred files yet</p>';
+      document.getElementById('history-container').innerHTML = '<p id="empty-history" class="text-xs text-slate-600 text-center py-2">No transferred files yet</p>';
     }
 
-    // 4. Drag and Drop Zone
+    // Drag & Drop Handling
     window.addEventListener('dragover', (e) => {
       e.preventDefault();
       document.getElementById('drop-overlay').classList.remove('hidden');
@@ -456,7 +519,7 @@
       if (files.length) enqueueFiles(files);
     });
 
-    // 5. In-Browser QR Scanner
+    // In-Browser QR Scanner
     function openScannerModal() {
       document.getElementById('scanner-modal').classList.remove('hidden');
       html5QrCode = new Html5Qrcode("reader");
@@ -464,7 +527,6 @@
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 220, height: 220 } },
         (decodedText) => {
-          // Extract PIN from URL or raw 4-digit code
           let pin = decodedText;
           if (decodedText.includes('?connect=')) {
             pin = new URL(decodedText).searchParams.get('connect');
@@ -475,7 +537,7 @@
             connectToPeer();
           }
         }
-      ).catch(() => alert('Camera permission denied or camera not found.'));
+      ).catch(() => alert('Camera permission denied or camera not accessible.'));
     }
 
     function closeScannerModal() {
@@ -485,24 +547,6 @@
       document.getElementById('scanner-modal').classList.add('hidden');
     }
 
-    // PWA & Service Worker
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const btn = document.getElementById('pwa-install-btn');
-      btn.classList.remove('hidden');
-      btn.onclick = () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => btn.classList.add('hidden'));
-      };
-    });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-
-    // Utilities & Modals
     function showTransferUI(show, text = '') {
       const box = document.getElementById('transfer-box');
       if (show) {
@@ -516,14 +560,16 @@
     function toggleQRModal() { document.getElementById('qr-modal').classList.toggle('hidden'); }
     function openTextModal() { document.getElementById('text-modal').classList.remove('hidden'); }
     function closeTextModal() { document.getElementById('text-modal').classList.add('hidden'); }
+    
     function sendTextMessage() {
       const text = document.getElementById('text-message').value.trim();
       if (!text || !activeConn) return;
       activeConn.send(JSON.stringify({ type: 'text', text }));
       document.getElementById('text-message').value = '';
       closeTextModal();
-      alert('Text sent!');
+      alert('Message sent!');
     }
+
     function showReceivedText(text) {
       currentReceivedText = text;
       document.getElementById('received-text-content').innerText = text;
@@ -539,6 +585,7 @@
       navigator.clipboard.writeText(myPin);
       alert('Copied PIN: ' + myPin);
     }
+
     function playFinishChime() {
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       try {
