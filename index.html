@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DropWave P2P — Multi-Peer Mesh & Secure File Sharing</title>
+  <title>DropWave P2P — Multi-Peer Mesh, Folder Zip & Voice</title>
   <meta name="theme-color" content="#020617" />
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- PeerJS Engine -->
@@ -12,6 +12,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- In-Browser QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- JSZip for Folder Zip on-the-fly -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between items-center p-4 sm:p-6 selection:bg-sky-500 selection:text-white relative overflow-x-hidden">
 
@@ -20,36 +22,42 @@
     <div class="w-20 h-20 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center text-4xl mb-4 animate-bounce">
       📂
     </div>
-    <h2 class="text-2xl font-black text-white">Drop to Broadcast!</h2>
-    <p class="text-sky-300 text-sm mt-1">Files will queue and prompt all connected devices</p>
+    <h2 class="text-2xl font-black text-white">Drop Files or Folders!</h2>
+    <p class="text-sky-300 text-sm mt-1">Files will automatically process and prompt paired peers</p>
   </div>
 
   <!-- Header -->
-  <header class="text-center my-3 w-full max-w-md">
+  <header class="text-center my-2 w-full max-w-md">
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold mb-2">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      Multi-Peer Mesh P2P
+      DropWave Pro Network
     </div>
 
     <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
       Drop<span class="text-sky-400">Wave</span>
     </h1>
 
-    <!-- 4-Digit Device PIN Card -->
-    <div class="mt-3 inline-flex items-center justify-between w-full bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-lg">
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-slate-400">Your PIN:</span>
-        <span id="my-code" class="text-lg font-mono font-black text-sky-400 tracking-widest">Connecting...</span>
+    <!-- Pairing PIN / Custom Room Bar -->
+    <div class="mt-3 bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-lg space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">PIN:</span>
+          <span id="my-code" class="text-lg font-mono font-black text-sky-400 tracking-widest">----</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="copyMyCode()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition font-medium">Copy PIN</button>
+          <button onclick="toggleQRModal()" class="text-[11px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+            QR
+          </button>
+          <button onclick="openScannerModal()" class="text-[11px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+            📷 Scan
+          </button>
+        </div>
       </div>
-      <div class="flex items-center gap-1.5">
-        <button onclick="copyMyCode()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition font-medium">Copy</button>
-        <button onclick="toggleQRModal()" class="text-[11px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-          QR
-        </button>
-        <button onclick="openScannerModal()" class="text-[11px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-          📷 Scan
-        </button>
+      <!-- Custom Permanent Room Input -->
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
+        <input id="room-input" type="text" placeholder="Custom Room (e.g. myroom)" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500" />
+        <button onclick="joinCustomRoom()" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold px-3 py-1 rounded-lg transition">Join Room</button>
       </div>
     </div>
   </header>
@@ -58,17 +66,16 @@
   <main class="w-full max-w-md flex flex-col items-center my-auto space-y-3">
     
     <!-- Connect Box -->
-    <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
-      <label class="text-xs font-semibold text-slate-300 mb-1.5 block">Connect to Another Device PIN:</label>
+    <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-xl">
       <div class="flex gap-2">
-        <input id="target-id" type="tel" maxlength="4" placeholder="4-digit PIN" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-center text-lg font-mono font-bold tracking-widest text-slate-100 focus:outline-none focus:border-sky-500" />
-        <button id="connect-btn" onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition">Add Peer</button>
+        <input id="target-id" type="tel" maxlength="4" placeholder="Enter target 4-digit PIN" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-center text-sm sm:text-base font-mono font-bold tracking-widest text-slate-100 focus:outline-none focus:border-sky-500" />
+        <button id="connect-btn" onclick="connectToPeer()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition whitespace-nowrap">Connect</button>
       </div>
       <p id="connection-status" class="text-[11px] text-slate-400 mt-2 text-center hidden"></p>
     </div>
 
     <!-- Connected Mesh Panel -->
-    <div id="radar" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center shadow-2xl relative min-h-[190px]">
+    <div id="radar" class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center shadow-2xl relative min-h-[200px]">
       
       <!-- Empty State -->
       <div id="empty-state" class="text-center py-2">
@@ -77,30 +84,37 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
           </svg>
         </div>
-        <p class="text-slate-300 font-semibold text-sm">Mesh is empty</p>
-        <p class="text-slate-500 text-xs mt-0.5">Pair one or more devices via PIN or QR code</p>
+        <p class="text-slate-300 font-semibold text-sm">Mesh is idle</p>
+        <p class="text-slate-500 text-xs mt-0.5">Pair devices via PIN, custom room, or QR code</p>
       </div>
 
-      <!-- Connected State (Multi-Peer Mesh) -->
+      <!-- Connected State -->
       <div id="connected-mesh" class="hidden flex-col items-center w-full">
         <div class="flex items-center justify-between w-full mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
             <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Connected Peers (<span id="peer-count">0</span>)</span>
           </div>
+          <button id="audio-call-btn" onclick="toggleAudioCall()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition">
+            🎙️ <span>Start Mic</span>
+          </button>
         </div>
 
-        <!-- Peer Badges -->
-        <div id="peer-list" class="flex flex-wrap gap-2 w-full mb-4"></div>
+        <div id="peer-list" class="flex flex-wrap gap-1.5 w-full mb-4"></div>
 
-        <div class="grid grid-cols-2 gap-2 w-full">
-          <button onclick="document.getElementById('file-input').click()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 px-3 rounded-xl transition shadow text-xs sm:text-sm flex items-center justify-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            Broadcast Files
+        <!-- Transfer Actions Grid -->
+        <div class="grid grid-cols-3 gap-2 w-full">
+          <button onclick="document.getElementById('file-input').click()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 px-2 rounded-xl transition shadow text-[11px] flex flex-col items-center justify-center gap-1">
+            <span class="text-sm">📄</span>
+            <span>Files</span>
           </button>
-          <button onclick="openTextModal()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold py-3 px-3 rounded-xl border border-slate-700 transition shadow text-xs sm:text-sm flex items-center justify-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-            Broadcast Text
+          <button onclick="document.getElementById('folder-input').click()" class="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2.5 px-2 rounded-xl transition shadow text-[11px] flex flex-col items-center justify-center gap-1">
+            <span class="text-sm">📁</span>
+            <span>Folder (Zip)</span>
+          </button>
+          <button onclick="openTextModal()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold py-2.5 px-2 rounded-xl border border-slate-700 transition shadow text-[11px] flex flex-col items-center justify-center gap-1">
+            <span class="text-sm">💬</span>
+            <span>Text</span>
           </button>
         </div>
       </div>
@@ -109,7 +123,7 @@
     <!-- Active Multi-File Progress Card -->
     <div id="transfer-box" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 hidden shadow-xl">
       <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-        <span id="transfer-status" class="font-semibold text-slate-200 truncate max-w-[220px]">Transferring...</span>
+        <span id="transfer-status" class="font-semibold text-slate-200 truncate max-w-[200px]">Transferring...</span>
         <span id="transfer-speed" class="font-mono text-sky-400 font-bold">0.0 MB/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden my-2">
@@ -127,13 +141,15 @@
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Transfer History</h3>
         <button onclick="clearHistory()" class="text-[10px] text-slate-500 hover:text-slate-400">Clear</button>
       </div>
-      <div id="history-container" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+      <div id="history-container" class="space-y-2 max-h-32 overflow-y-auto pr-1">
         <p id="empty-history" class="text-xs text-slate-600 text-center py-2">No transferred files yet</p>
       </div>
     </div>
   </main>
 
+  <!-- Inputs -->
   <input type="file" id="file-input" class="hidden" multiple />
+  <input type="file" id="folder-input" class="hidden" webkitdirectory directory multiple />
 
   <!-- Incoming Transfer Approval Modal -->
   <div id="approval-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -141,15 +157,15 @@
       <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl mx-auto mb-3">
         📥
       </div>
-      <h3 class="text-sm font-bold text-white mb-1">Incoming Transfer Request</h3>
+      <h3 class="text-sm font-bold text-white mb-1">Transfer Request</h3>
       <p class="text-xs text-slate-400 mb-3"><span id="req-sender" class="font-mono text-sky-400 font-semibold">Peer</span> wants to send:</p>
       <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4 text-left">
         <p id="req-filename" class="text-xs font-semibold text-slate-200 truncate mb-0.5">Filename.png</p>
         <p id="req-filesize" class="text-[11px] text-slate-500">0.0 MB</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="respondToTransfer(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Decline</button>
-        <button onclick="respondToTransfer(true)" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition">Accept</button>
+        <button onclick="respondToTransfer(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-semibold transition">Decline</button>
+        <button onclick="respondToTransfer(true)" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2 rounded-xl text-xs font-bold transition">Accept</button>
       </div>
     </div>
   </div>
@@ -158,9 +174,9 @@
   <div id="scanner-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full text-center shadow-2xl">
       <h3 class="text-base font-bold text-white mb-1">Scan Device QR</h3>
-      <p class="text-xs text-slate-400 mb-3">Center the other device's QR code in the box</p>
+      <p class="text-xs text-slate-400 mb-3">Center the QR code in the box</p>
       <div id="reader" class="overflow-hidden rounded-2xl border border-slate-700 bg-black"></div>
-      <button onclick="closeScannerModal()" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition">Close Camera</button>
+      <button onclick="closeScannerModal()" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-semibold transition">Close Camera</button>
     </div>
   </div>
 
@@ -170,18 +186,18 @@
       <h3 class="text-base font-bold text-white mb-1">Pairing QR Code</h3>
       <p class="text-xs text-slate-400 mb-4">Scan with another device to join the mesh</p>
       <div id="qrcode" class="bg-white p-3 rounded-2xl inline-block shadow-inner mx-auto mb-4"></div>
-      <button onclick="toggleQRModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition">Close</button>
+      <button onclick="toggleQRModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-semibold transition">Close</button>
     </div>
   </div>
 
-  <!-- Text / Clipboard Modal -->
+  <!-- Text Modal -->
   <div id="text-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full shadow-2xl">
-      <h3 class="text-base font-bold text-white mb-2">Broadcast Clipboard / Text</h3>
+      <h3 class="text-base font-bold text-white mb-2">Broadcast Text</h3>
       <textarea id="text-message" rows="4" placeholder="Paste link, message, or notes..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-sky-500 mb-3"></textarea>
       <div class="flex gap-2">
-        <button onclick="closeTextModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Cancel</button>
-        <button onclick="sendTextMessage()" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition">Broadcast</button>
+        <button onclick="closeTextModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-semibold transition">Cancel</button>
+        <button onclick="sendTextMessage()" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 py-2 rounded-xl text-xs font-bold transition">Broadcast</button>
       </div>
     </div>
   </div>
@@ -191,7 +207,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full shadow-2xl">
       <div class="flex items-center gap-2 mb-2 text-sky-400">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <h3 class="text-sm font-bold text-white">Broadcast Message</h3>
+        <h3 class="text-sm font-bold text-white">Received Message</h3>
       </div>
       <div id="received-text-content" class="bg-slate-950 p-3 rounded-xl text-sm font-mono text-slate-200 break-all max-h-48 overflow-y-auto mb-3 border border-slate-800"></div>
       <div class="flex gap-2">
@@ -200,6 +216,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Hidden Audio Player for P2P Voice -->
+  <audio id="remote-audio" autoplay playsinline class="hidden"></audio>
 
   <!-- Creator Credits Footer -->
   <footer class="mt-4 text-center border-t border-slate-800/80 pt-4 w-full max-w-md">
@@ -214,18 +233,22 @@
         <span class="font-medium">@dhanushh.07__</span>
       </a>
     </div>
-    <p class="text-[10px] text-slate-600 mt-1">Direct WebRTC P2P • Zero Cloud Storage • Unlimited Speed</p>
+    <p class="text-[10px] text-slate-600 mt-1">Direct WebRTC P2P • No Cloud Storage • Unlimited Speed</p>
   </footer>
 
   <script>
-    let myPin = Math.floor(1000 + Math.random() * 9000).toString();
-    const APP_NAMESPACE = 'dropwave_mesh_';
+    const APP_NAMESPACE = 'dropwave_pro_';
+    const urlParams = new URLSearchParams(window.location.search);
+    const customRoomParam = urlParams.get('room');
+
+    // Generate either custom room peer ID or random 4-digit PIN
+    let myIdentifier = customRoomParam ? customRoomParam : Math.floor(1000 + Math.random() * 9000).toString();
 
     let peer = null;
-    // Multi-Peer Mesh Connection Map: { [peerId]: conn }
     let meshConnections = new Map();
-    
-    // Approval & Transfer State
+    let localStream = null;
+    let isCalling = false;
+
     let pendingRequest = null;
     let incomingFileInfo = null;
     let receivedChunks = [];
@@ -239,10 +262,12 @@
     let currentSendingIndex = 0;
     let html5QrCode = null;
 
-    function initPeer(pin) {
+    function initPeer(identifier) {
       if (peer) peer.destroy();
 
-      peer = new Peer(APP_NAMESPACE + pin, {
+      const fullId = APP_NAMESPACE + identifier + (customRoomParam ? ('_' + Math.random().toString(36).substring(2, 6)) : '');
+
+      peer = new Peer(fullId, {
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -254,13 +279,12 @@
       });
 
       peer.on('open', (id) => {
-        myPin = id.replace(APP_NAMESPACE, '');
-        document.getElementById('my-code').innerText = myPin;
-        generateQR(myPin);
+        document.getElementById('my-code').innerText = identifier;
+        generateQR(identifier);
 
-        const urlParams = new URLSearchParams(window.location.search);
+        // Auto-connect from QR code param
         const autoTarget = urlParams.get('connect');
-        if (autoTarget && autoTarget !== myPin) {
+        if (autoTarget && autoTarget !== identifier) {
           document.getElementById('target-id').value = autoTarget;
           connectToPeer();
         }
@@ -268,21 +292,28 @@
 
       peer.on('connection', (conn) => setupConnection(conn));
 
+      // Handle incoming voice call
+      peer.on('call', (call) => {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          localStream = stream;
+          call.answer(stream);
+          call.on('stream', (remoteStream) => {
+            document.getElementById('remote-audio').srcObject = remoteStream;
+            setCallUI(true);
+          });
+        }).catch(() => alert('Microphone access required for P2P voice call.'));
+      });
+
       peer.on('error', (err) => {
         console.warn('Peer error:', err);
-        if (err.type === 'unavailable-id') {
-          myPin = Math.floor(1000 + Math.random() * 9000).toString();
-          initPeer(myPin);
-        } else if (err.type === 'peer-unavailable') {
-          setStatus('Peer not found. Check PIN and retry.', 'text-rose-400');
+        if (err.type === 'peer-unavailable') {
+          setStatus('Peer not found. Verify PIN or Room.', 'text-rose-400');
           document.getElementById('connect-btn').disabled = false;
-        } else {
-          setStatus('Note: ' + err.type, 'text-amber-400');
         }
       });
     }
 
-    initPeer(myPin);
+    initPeer(myIdentifier);
 
     function generateQR(pin) {
       const qrel = document.getElementById('qrcode');
@@ -298,19 +329,19 @@
       });
     }
 
-    document.getElementById('target-id').addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') connectToPeer();
-    });
+    function joinCustomRoom() {
+      const room = document.getElementById('room-input').value.trim().toLowerCase();
+      if (!room) return;
+      window.location.href = `${window.location.origin}${window.location.pathname}?room=${room}`;
+    }
 
     function connectToPeer() {
       const targetPin = document.getElementById('target-id').value.trim();
-      if (!targetPin || targetPin.length !== 4) return alert('Enter a 4-digit PIN');
-      if (targetPin === myPin) return alert("Cannot connect to your own PIN!");
+      if (!targetPin) return alert('Enter a PIN or room name');
+      if (targetPin === myIdentifier) return alert("Cannot connect to your own device PIN!");
 
       const fullTargetId = APP_NAMESPACE + targetPin;
-      if (meshConnections.has(fullTargetId)) return alert('Already connected to this PIN!');
-
-      setStatus('Connecting to ' + targetPin + '...', 'text-sky-400');
+      setStatus('Connecting...', 'text-sky-400');
       document.getElementById('connect-btn').disabled = true;
 
       const conn = peer.connect(fullTargetId);
@@ -323,7 +354,7 @@
         updateMeshUI();
         document.getElementById('target-id').value = '';
         document.getElementById('connect-btn').disabled = false;
-        setStatus('Mesh updated!', 'text-emerald-400');
+        setStatus('Mesh connected!', 'text-emerald-400');
         playFinishChime();
       }
 
@@ -333,13 +364,9 @@
       conn.on('data', (data) => {
         if (typeof data === 'string') {
           const msg = JSON.parse(data);
-
-          // 1. Transfer Request (Feature 2: Approval Modal)
-          if (msg.type === 'request_transfer') {
-            promptApproval(conn, msg);
-          } else if (msg.type === 'response_transfer') {
-            handleTransferResponse(conn, msg);
-          } else if (msg.type === 'header') {
+          if (msg.type === 'request_transfer') promptApproval(conn, msg);
+          else if (msg.type === 'response_transfer') handleTransferResponse(conn, msg);
+          else if (msg.type === 'header') {
             incomingFileInfo = msg;
             receivedChunks = [];
             receivedBytes = 0;
@@ -364,15 +391,8 @@
         }
       });
 
-      conn.on('close', () => {
-        meshConnections.delete(conn.peer);
-        updateMeshUI();
-      });
-
-      conn.on('error', () => {
-        meshConnections.delete(conn.peer);
-        updateMeshUI();
-      });
+      conn.on('close', () => { meshConnections.delete(conn.peer); updateMeshUI(); });
+      conn.on('error', () => { meshConnections.delete(conn.peer); updateMeshUI(); });
     }
 
     function updateMeshUI() {
@@ -393,10 +413,10 @@
       const peerListEl = document.getElementById('peer-list');
       peerListEl.innerHTML = '';
       meshConnections.forEach((_, peerId) => {
-        const pin = peerId.replace(APP_NAMESPACE, '');
+        const pin = peerId.replace(APP_NAMESPACE, '').split('_')[0];
         const badge = document.createElement('div');
-        badge.className = "flex items-center gap-1.5 bg-slate-800/90 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-mono text-sky-400";
-        badge.innerHTML = `<span>📱 PIN: ${pin}</span>`;
+        badge.className = "flex items-center gap-1 bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-lg text-xs font-mono text-sky-400";
+        badge.innerHTML = `<span>📱 ${pin}</span>`;
         peerListEl.appendChild(badge);
       });
     }
@@ -408,10 +428,10 @@
       el.classList.remove('hidden');
     }
 
-    // Feature 2: Approval Flow
+    // Approval Request Handling
     function promptApproval(conn, msg) {
       pendingRequest = { conn, msg };
-      document.getElementById('req-sender').innerText = 'PIN ' + conn.peer.replace(APP_NAMESPACE, '');
+      document.getElementById('req-sender').innerText = 'PIN ' + conn.peer.replace(APP_NAMESPACE, '').split('_')[0];
       document.getElementById('req-filename').innerText = msg.name;
       document.getElementById('req-filesize').innerText = (msg.size / (1024 * 1024)).toFixed(2) + ' MB';
       document.getElementById('approval-modal').classList.remove('hidden');
@@ -429,19 +449,40 @@
     }
 
     function handleTransferResponse(conn, msg) {
-      if (msg.accepted) {
-        startSendingActiveFile();
-      } else {
-        alert('File transfer was declined by ' + conn.peer.replace(APP_NAMESPACE, ''));
+      if (msg.accepted) startSendingActiveFile();
+      else {
+        alert('Transfer was declined.');
         showTransferUI(false);
       }
     }
 
-    // Outgoing File Queue & Broadcasting (Feature 5: Multi-Peer Mesh)
+    // Regular Files and Folders (Zip) Handling
     document.getElementById('file-input').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (!files.length || meshConnections.size === 0) return;
       outgoingQueue = files;
+      currentSendingIndex = 0;
+      requestTransferForCurrentFile();
+    };
+
+    // Auto-Zip on-the-fly for entire folder upload
+    document.getElementById('folder-input').onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length || meshConnections.size === 0) return;
+
+      showTransferUI(true, 'Compressing folder to .zip...');
+      const zip = new JSZip();
+
+      files.forEach((file) => {
+        const path = file.webkitRelativePath || file.name;
+        zip.file(path, file);
+      });
+
+      const rootFolder = (files[0].webkitRelativePath || 'Folder').split('/')[0];
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const zippedFile = new File([zipBlob], `${rootFolder}.zip`, { type: 'application/zip' });
+
+      outgoingQueue = [zippedFile];
       currentSendingIndex = 0;
       requestTransferForCurrentFile();
     };
@@ -455,9 +496,8 @@
       }
 
       const file = outgoingQueue[currentSendingIndex];
-      showTransferUI(true, `Awaiting approval for: ${file.name}`);
+      showTransferUI(true, `Awaiting approval: ${file.name}`);
 
-      // Broadcast transfer request to all mesh peers
       meshConnections.forEach(conn => {
         conn.send(JSON.stringify({
           type: 'request_transfer',
@@ -533,14 +573,12 @@
     function saveReceivedFile() {
       const blob = new Blob(receivedChunks, { type: incomingFileInfo.mime || 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
-      
       const a = document.createElement('a');
       a.href = url;
       a.download = incomingFileInfo.name;
       document.body.appendChild(a);
       a.click();
       a.remove();
-
       addHistoryItem(incomingFileInfo.name, incomingFileInfo.size, incomingFileInfo.mime, url, 'Received');
     }
 
@@ -555,6 +593,8 @@
       let previewEl = `<div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-xs font-bold mr-2 shrink-0">📄</div>`;
       if (mime && mime.startsWith('image/') && blobUrl) {
         previewEl = `<img src="${blobUrl}" class="w-7 h-7 rounded-lg object-cover mr-2 border border-slate-700 shrink-0" />`;
+      } else if (name.endsWith('.zip')) {
+        previewEl = `<div class="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold mr-2 shrink-0">📦</div>`;
       }
 
       div.innerHTML = `
@@ -574,22 +614,46 @@
       document.getElementById('history-container').innerHTML = '<p id="empty-history" class="text-xs text-slate-600 text-center py-2">No transferred files yet</p>';
     }
 
+    // P2P Walkie-Talkie / Voice Call
+    function toggleAudioCall() {
+      if (isCalling) {
+        if (localStream) {
+          localStream.getTracks().forEach(track => track.stop());
+          localStream = null;
+        }
+        setCallUI(false);
+      } else {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          localStream = stream;
+          meshConnections.forEach(conn => {
+            const call = peer.call(conn.peer, stream);
+            call.on('stream', (remoteStream) => {
+              document.getElementById('remote-audio').srcObject = remoteStream;
+            });
+          });
+          setCallUI(true);
+        }).catch(() => alert('Microphone permission required for voice call.'));
+      }
+    }
+
+    function setCallUI(active) {
+      isCalling = active;
+      const btn = document.getElementById('audio-call-btn');
+      if (active) {
+        btn.className = "bg-rose-500/20 border border-rose-500 text-rose-400 text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition animate-pulse";
+        btn.innerHTML = `<span>🔴 Stop Mic</span>`;
+      } else {
+        btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition";
+        btn.innerHTML = `🎙️ <span>Start Mic</span>`;
+      }
+    }
+
     // Drag & Drop
-    window.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      document.getElementById('drop-overlay').classList.remove('hidden');
-    });
-
-    ['dragleave', 'drop'].forEach(ev => {
-      window.addEventListener(ev, (e) => {
-        e.preventDefault();
-        document.getElementById('drop-overlay').classList.add('hidden');
-      });
-    });
-
+    window.addEventListener('dragover', (e) => { e.preventDefault(); document.getElementById('drop-overlay').classList.remove('hidden'); });
+    ['dragleave', 'drop'].forEach(ev => window.addEventListener(ev, (e) => { e.preventDefault(); document.getElementById('drop-overlay').classList.add('hidden'); }));
     window.addEventListener('drop', (e) => {
       e.preventDefault();
-      if (meshConnections.size === 0) return alert('Connect at least one device first!');
+      if (meshConnections.size === 0) return alert('Connect a device first!');
       const files = Array.from(e.dataTransfer.files);
       if (files.length) {
         outgoingQueue = files;
@@ -598,7 +662,7 @@
       }
     });
 
-    // Camera Scanner
+    // Scanner & Modals
     function openScannerModal() {
       document.getElementById('scanner-modal').classList.remove('hidden');
       html5QrCode = new Html5Qrcode("reader");
@@ -607,22 +671,18 @@
         { fps: 10, qrbox: { width: 220, height: 220 } },
         (decodedText) => {
           let pin = decodedText;
-          if (decodedText.includes('?connect=')) {
-            pin = new URL(decodedText).searchParams.get('connect');
-          }
-          if (pin && pin.length === 4) {
+          if (decodedText.includes('?connect=')) pin = new URL(decodedText).searchParams.get('connect');
+          if (pin) {
             closeScannerModal();
             document.getElementById('target-id').value = pin;
             connectToPeer();
           }
         }
-      ).catch(() => alert('Camera permission denied or camera not accessible.'));
+      ).catch(() => alert('Camera access denied or unavailable.'));
     }
 
     function closeScannerModal() {
-      if (html5QrCode) {
-        html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
-      }
+      if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
       document.getElementById('scanner-modal').classList.add('hidden');
     }
 
@@ -648,7 +708,7 @@
       });
       document.getElementById('text-message').value = '';
       closeTextModal();
-      alert('Broadcasted message to all peers!');
+      alert('Broadcasted text!');
     }
 
     function showReceivedText(text) {
@@ -663,8 +723,8 @@
       closeReceivedTextModal();
     }
     function copyMyCode() {
-      navigator.clipboard.writeText(myPin);
-      alert('Copied PIN: ' + myPin);
+      navigator.clipboard.writeText(myIdentifier);
+      alert('Copied PIN: ' + myIdentifier);
     }
 
     function playFinishChime() {
